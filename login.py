@@ -73,14 +73,18 @@ def login():
 
 
     def submit(*e):
+
         email = ipEmail.get()
         password = ipPass.get()
+
         try:
-            global getuser
+            global userUID
             user = ath.sign_in_with_email_and_password(email, password)
-            getuser = ath.refresh(user['refreshToken'])    
+            getuser = ath.refresh(user['refreshToken'])
+            userUID = getuser['userId']
             # tkinter.messagebox.showinfo( title='Thông báo', message=getuser['userId'])
             log.destroy()
+            
         except  Exception as e:
             #tkinter.messagebox.showwarning( title='Thông báo', message='Email hoặc mật khẩu không chính xác!')
             print(e)
@@ -100,6 +104,7 @@ def login():
 
         #---Xử lý đăng ký tài khoản---
 def register():
+
     try:
         log.destroy()
     except:

@@ -22,7 +22,7 @@ server.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
 HOST = "localhost"
 PORT = 1404
 server.bind((HOST, PORT))
-server.listen(3)
+server.listen(5)
 
 clients = []
 
