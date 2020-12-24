@@ -7,7 +7,8 @@ from tkinter.constants import TOP
 import tkinter.messagebox
 from PIL import Image, ImageTk
 import socket
-# import login
+import login
+from login import getuser, login
 import _thread
 from typing import List, Tuple
 import json
@@ -24,9 +25,11 @@ firebaseConfig = {
 }
 
 firebase = pyrebase.initialize_app(firebaseConfig)
-
+ath = firebase.auth()
 rdb = firebase.database()
 
+#getuser = ath.refresh(user['refreshToken'])    
+print(getuser['userId'])
  
 def clientloop(userUID):
     
@@ -93,8 +96,16 @@ def clientloop(userUID):
     btnSend = Button(fChat, text='Gửi', command=sendMessage)
     btnSend.place( x=400, y=550, width=85, height=40) 
 
-
     # #Menu Options
+
+    def out():
+        try:
+            clt.destroy()
+            login()
+        except Exception as e:
+            print(e)
+
+    btnOut = Button(fUser, text='Đăng Xuất', command=out).pack()
     # i = Image.open('D:\Project Library\Python\ChatRoom\img\menu.png')
     # i = i.resize((50,50), Image.ANTIALIAS)
     # menuImg = ImageTk.PhotoImage(i)
@@ -120,7 +131,5 @@ def clientloop(userUID):
     clt.mainloop()
  
 
-#data = {'message02': 'alo alo'}
-#rdb.child('user').child('vandong').child("message03").set(data)
 clientloop("Văn Đông")
 

@@ -9,6 +9,7 @@ import pyrebase
 import firebase_admin
 from firebase_admin import auth, credentials
 
+
 cred = credentials.Certificate("chatroom-ad9f5-firebase-adminsdk-nfjmc-783a12fab7.json")
 firebase_admin.initialize_app(cred)
 
@@ -75,10 +76,15 @@ def login():
         email = ipEmail.get()
         password = ipPass.get()
         try:
+            global getuser
             user = ath.sign_in_with_email_and_password(email, password)
-            tkinter.messagebox.showinfo( title='Thông báo', message='Đăng nhập thành công!')
-        except:
-            tkinter.messagebox.showwarning( title='Thông báo', message='Email hoặc mật khẩu không chính xác!')
+            getuser = ath.refresh(user['refreshToken'])    
+            # tkinter.messagebox.showinfo( title='Thông báo', message=getuser['userId'])
+            log.destroy()
+        except  Exception as e:
+            #tkinter.messagebox.showwarning( title='Thông báo', message='Email hoặc mật khẩu không chính xác!')
+            print(e)
+
 
     btnLog = Button( log, bd='4', text='Đăng Nhập', width=15, fg='white', bg='#d6ab00', font=('Arial', 13, 'bold'), command=submit)
     btnLog.place( x=170, y=380)
