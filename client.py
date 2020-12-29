@@ -7,13 +7,12 @@ from tkinter.constants import TOP
 import tkinter.messagebox
 from PIL import Image, ImageTk
 import socket
-import login
-from login import login, userUID
 import _thread
 from typing import List, Tuple
 import json
 
-firebaseConfig = {
+
+config = {
     'apiKey': "AIzaSyBkGks1-i7U4xZV29_5_lnhoP4eIPVmKLw",
     'authDomain': "chatroom-ad9f5.firebaseapp.com",
     'databaseURL': "https://chatroom-ad9f5.firebaseio.com",
@@ -24,17 +23,17 @@ firebaseConfig = {
     'measurementId': "G-FT8YT1QEZZ"
 }
 
-firebase = pyrebase.initialize_app(firebaseConfig)
-ath = firebase.auth()
-rdb = firebase.database()
+fb = pyrebase.initialize_app(config)
+ath = fb.auth()
+rdb = fb.database()
 
-#getuser = ath.refresh(user['refreshToken'])    
 #xử lý get chat history
 chatList = rdb.child("message").get()
+global state
 
 
 def clientloop(userUID):
-    
+
     def connect_Server():
         global c
         c = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -44,29 +43,57 @@ def clientloop(userUID):
         c.connect((HOST, PORT))
 
         #dict
-        mess = {"userUID": userUID, "message": ""}   
+        mess = {"userUID": userUID, "message": "", "state": "Online"}   
         c.send(str(mess).encode('utf-8'))
         global ct
         ct = c
         _thread.start_new_thread(recvMessage, (c,))
 
-
     #Hàm nhận message từ server
     def recvMessage(c):
+
         while True:
             mess = c.recv(1024).decode('utf-8')
             rep = mess.replace("'","\"")
             m = json.loads(rep)
+                
+
+            if m["state"] == "Online":
+                print(m["listUser"])
+                lstUser.configure(state='normal')
+                lstUser.delete(1.0, END)
+                for x in m["listUser"]:       
+                    lstUser.insert(INSERT, x+"\n")
+                    lstUser.yview(END)
+
+                lstUser.configure(state='disabled')
+
+
+            elif m["state"] == "Offline":
+                a = m["listUser"]
+                lstUser.configure(state='normal')
+                listUser.delete(1.0, END)
+                for x in a: 
+                    lstUser.insert(INSERT, x+"\n")
+                    lstUser.yview(END)
+
+                lstUser.configure(state='disabled')
+
+
             if m["message"] != "":
+                textArea.configure(state='normal')
                 textArea.insert(END,m["userUID"]+": "+m["message"]+"\n")
                 textArea.yview(END)
-
+                textArea.configure(state='disabled')
 
     #Hàm xử lý đăng xuất
-    def out():
+    def out(*args):
         try:
             clt.destroy()
-            login()
+            global state
+            state = False
+            m = str({"userUID": userUID, "message": "", "state": "Offline"})
+            c.send(m.encode('utf-8'))
         except Exception as e:
             print(e)
 
@@ -79,7 +106,7 @@ def clientloop(userUID):
         if mess.strip():
             data = {userUID: mess}
             rdb.child("message").push(data) 
-            mess = str({'userUID': userUID, 'message': mess})
+            mess = str({'userUID': userUID, 'message': mess, 'state': 'None'})
             c.send(mess.encode('utf-8'))  
         else:
             pass
@@ -89,6 +116,7 @@ def clientloop(userUID):
     #Tkinter GUI
     bg = 'white'
     dark = "#242526"
+    
 
     clt = Tk()
     clt.title(userUID)
@@ -101,8 +129,6 @@ def clientloop(userUID):
 
     fChat = Frame(clt, bg=dark, width=500, height=600)
     fChat.pack(side=RIGHT)
-
-    fonline = Frame(fUser, bg="#232f34", width=270, height=480).place( x=15, y=110 )
 
     #Chat Group
     Label(fChat, text="Chat Room", fg="#6bb0ea", bg=dark, font=('Arial', 15, 'bold')).place(x=185, y=3)
@@ -117,33 +143,42 @@ def clientloop(userUID):
             textArea.insert(END, key+": "+value+"\n")
 
 
+    textArea.configure(state='disabled')
+
     ipMess = Entry(fChat, width=35, font=('Arial', 14))
     ipMess.place( x=0, y=550, height=40)
         
     btnSend = Button(fChat, text='Gửi', fg="black", bg="#6bb0ea", command=sendMessage)
     btnSend.place( x=400, y=550, width=85, height=40) 
 
+
     #User GUI
     i = Image.open("img\logoUs.png")
     i = i.resize((50,50), Image.ANTIALIAS)
     img =ImageTk.PhotoImage(i)     
 
-    Label( fUser, image=img, height=50, width=50, bg= dark).place(x=3, y=20)
-    Label( fUser, text=userUID, fg="#6bb0ea", bg= dark,font=('Arial', 18, 'bold')).place(x=100, y=30)
+    Label( fUser, image=img, height=50, width=50, bg= dark).place(x=5, y=20)
+    Label( fUser, text=userUID, fg="#6bb0ea", bg= dark, font=('Arial', 18, 'bold')).place(x=100, y=30)
     btnOut = Button(fUser, text='Đăng Xuất', fg="#6bb0ea", bg="#232f34", command=out).place( x=0, y=80)
     
+    Label( fUser, text='Danh sách Online', fg="white", bg="#232f34", font=('Arial', 15, 'bold')).place( x=60 , y=110)
+    lstUser = ScrolledText( fUser, width=20, fg="#6bb0ea", bg="#232f34",height=18 ,font=('Arial', 16, 'bold'), wrap=WORD)
+    lstUser.place( x=15, y=145 )
+    lstUser.configure(state='disabled')
 
-    
 
+
+    def on_closing(*args):
+        clt.destroy()
+        m = str({"userUID": userUID, "message": "", "state": "Offline"})
+        c.send(m.encode('utf-8'))
+    #    _thread.exit()
+        print('ok')
+
+    clt.protocol("WM_DELETE_WINDOW", on_closing)
 
     connect_Server()
-    def closing():
-        clt.destroy()
-
-    #clt.protocol('WM_DELETE_WINDOW', closing)
-
     clt.bind('<Return>', sendMessage)
     clt.mainloop()
 
-clientloop(userUID)
 

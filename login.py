@@ -8,7 +8,8 @@ from typing import Text
 import pyrebase
 import firebase_admin
 from firebase_admin import auth, credentials
-
+import client
+from client import clientloop
 
 cred = credentials.Certificate("chatroom-ad9f5-firebase-adminsdk-nfjmc-783a12fab7.json")
 firebase_admin.initialize_app(cred)
@@ -72,7 +73,7 @@ def login():
     ipPass.place( x=25, y=155)
 
 
-    def submit(*e):
+    def submit(*args):
 
         email = ipEmail.get()
         password = ipPass.get()
@@ -82,9 +83,9 @@ def login():
             user = ath.sign_in_with_email_and_password(email, password)
             getuser = ath.refresh(user['refreshToken'])
             userUID = getuser['userId']
-            # tkinter.messagebox.showinfo( title='Thông báo', message=getuser['userId'])
             log.destroy()
-            
+            client.clientloop(userUID)
+         
         except  Exception as e:
             #tkinter.messagebox.showwarning( title='Thông báo', message='Email hoặc mật khẩu không chính xác!')
             print(e)
@@ -179,8 +180,14 @@ def register():
     reg.bind('<Return>', submit)
     reg.mainloop()
     
-
 login()
 
+from client import state
+while True:
+    if state==False:
+        login()
+        state = True
+        pass
 
+    
 

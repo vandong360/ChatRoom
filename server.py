@@ -22,9 +22,10 @@ server.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
 HOST = "localhost"
 PORT = 1404
 server.bind((HOST, PORT))
-server.listen(5)
+server.listen(7)
 
 clients = []
+listUsers = []
 
 def connectClient(c):
     while True:
@@ -32,9 +33,22 @@ def connectClient(c):
             mess = c.recv(1024).decode('utf-8')
             m = mess.replace("'","\"")
             p = json.loads(m)
+
             userUID = p["userUID"]
             message = p["message"]
-            toSend = str( {'userUID': userUID, 'message': message} )
+            state = p["state"]
+
+            #Check trạng thái hoạt động gửi về client:
+            if state == "Online":
+                listUsers.append(userUID) 
+
+            elif state == "Offline":
+                clients.pop(clients.index(c))
+                listUsers.remove(userUID)
+                print(listUsers)
+                print(len(clients))
+            
+            toSend = str( {'userUID': userUID, 'message': message, 'state':  state, 'listUser': listUsers} )
             sendToAll(toSend)
         except:
             pass
@@ -50,7 +64,7 @@ while True:
         print('Kết nối thành công')
         print('Connected by', ad)
         clients.append(c)
-        print(len(clients))
         _thread.start_new_thread( connectClient, (c,))  
+        print("Số client: "+str(len(clients)))
     except:
         continue
