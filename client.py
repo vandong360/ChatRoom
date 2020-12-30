@@ -59,37 +59,34 @@ def clientloop(userUID):
                 
 
             if m["state"] == "Online":
-                print(m["listUser"])
                 lstUser.configure(state='normal')
                 lstUser.delete(1.0, END)
                 for x in m["listUser"]:       
                     lstUser.insert(INSERT, x+"\n")
                     lstUser.yview(END)
-
+                print("onl")
                 lstUser.configure(state='disabled')
-
+                
 
             elif m["state"] == "Offline":
-                a = m["listUser"]
                 lstUser.configure(state='normal')
-                listUser.delete(1.0, END)
-                for x in a: 
-                    lstUser.insert(INSERT, x+"\n")
+                lstUser.delete(1.0, END)
+                for a in m["listUser"]: 
+                    lstUser.insert(INSERT, a+"\n")
                     lstUser.yview(END)
-
+                print("off")
                 lstUser.configure(state='disabled')
 
 
             if m["message"] != "":
                 textArea.configure(state='normal')
-                textArea.insert(END,m["userUID"]+": "+m["message"]+"\n")
+                textArea.insert( END, m["userUID"]+": "+m["message"]+"\n")
                 textArea.yview(END)
                 textArea.configure(state='disabled')
 
     #Hàm xử lý đăng xuất
     def out(*args):
-        try:
-            clt.destroy()
+        try: 
             global state
             state = False
             m = str({"userUID": userUID, "message": "", "state": "Offline"})
@@ -172,8 +169,6 @@ def clientloop(userUID):
         clt.destroy()
         m = str({"userUID": userUID, "message": "", "state": "Offline"})
         c.send(m.encode('utf-8'))
-    #    _thread.exit()
-        print('ok')
 
     clt.protocol("WM_DELETE_WINDOW", on_closing)
 
