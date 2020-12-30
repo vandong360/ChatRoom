@@ -188,7 +188,6 @@ while True:
         login()
         state = True
         continue
-    print(':D')
 
     
 

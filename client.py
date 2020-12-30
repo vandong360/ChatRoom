@@ -89,6 +89,7 @@ def clientloop(userUID):
         try: 
             global state
             state = False
+            clt.destroy()
             m = str({"userUID": userUID, "message": "", "state": "Offline"})
             c.send(m.encode('utf-8'))
         except Exception as e:
@@ -166,6 +167,8 @@ def clientloop(userUID):
 
 
     def on_closing(*args):
+        global state
+        state = True
         clt.destroy()
         m = str({"userUID": userUID, "message": "", "state": "Offline"})
         c.send(m.encode('utf-8'))
